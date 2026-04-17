@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { logout } from "@/lib/actions/auth"
 
 export default function Page() {
   return (
@@ -13,6 +14,9 @@ export default function Page() {
         <div className="font-mono text-xs text-muted-foreground">
           (Press <kbd>d</kbd> to toggle dark mode)
         </div>
+        <form action={logout}>
+          <Button type="submit">Logout</Button>
+        </form>
       </div>
     </div>
   )

@@ -5,7 +5,7 @@ import { AUTH_COOKIE_NAME } from "@/lib/server/auth-cookie"
 
 const authRoutes = ["/login", "/register"]
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const token = request.cookies.get(AUTH_COOKIE_NAME)
   const { pathname } = request.nextUrl
 
