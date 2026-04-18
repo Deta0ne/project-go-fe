@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button"
+import { logout } from "@/lib/actions/auth"
+import Link from "next/link"
 
 export default function Page() {
   return (
@@ -12,6 +14,14 @@ export default function Page() {
         </div>
         <div className="font-mono text-xs text-muted-foreground">
           (Press <kbd>d</kbd> to toggle dark mode)
+        </div>
+        <form action={logout}>
+          <Button type="submit">Logout</Button>
+        </form>
+        <div className="flex flex-col gap-4 text-sm leading-loose">
+          <Button asChild>
+            <Link href="/chat">Chat</Link>
+          </Button>
         </div>
       </div>
     </div>
