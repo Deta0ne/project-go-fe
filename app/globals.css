@@ -426,7 +426,18 @@
     transparent 140deg,
     transparent 360deg
   );
-
+  /* Carve the gradient down to just the 1.5px ring between content-box
+   * and border-box. Both prefixed and standard properties are required:
+   * older Chromium honours -webkit-mask, modern Chrome/Safari/Firefox
+   * honour the standard `mask` + `mask-composite: exclude`. Removing
+   * either of the linear-gradient declarations leaves the full conic
+   * gradient visible inside the box. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   animation: composer-border-spin 3s linear infinite;

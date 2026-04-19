@@ -11,7 +11,11 @@ interface MarkdownRendererProps {
   isStreaming?: boolean
 }
 
-export function MarkdownRenderer({ content, className, isStreaming = false }: MarkdownRendererProps) {
+export function MarkdownRenderer({
+  content,
+  className,
+  isStreaming = false,
+}: MarkdownRendererProps) {
   const renderedContentRef = useRef("")
   const [staticContent, setStaticContent] = useState("")
   const [animatingContent, setAnimatingContent] = useState("")
@@ -34,7 +38,9 @@ export function MarkdownRenderer({ content, className, isStreaming = false }: Ma
       // Move first 150 chars to static (finding a word boundary)
       const cutPoint = animatingContent.lastIndexOf(" ", 150)
       if (cutPoint > 50) {
-        setStaticContent((prev) => prev + animatingContent.slice(0, cutPoint + 1))
+        setStaticContent(
+          (prev) => prev + animatingContent.slice(0, cutPoint + 1)
+        )
         setAnimatingContent(animatingContent.slice(cutPoint + 1))
       }
     }
@@ -50,9 +56,12 @@ export function MarkdownRenderer({ content, className, isStreaming = false }: Ma
       const codeMatch = remaining.match(/^`([^`]+)`/)
       if (codeMatch) {
         elements.push(
-          <code key={keyIndex++} className="px-1.5 py-0.5 bg-stone-100 text-stone-700 rounded text-sm font-mono">
+          <code
+            key={keyIndex++}
+            className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-sm text-stone-700"
+          >
             {codeMatch[1]}
-          </code>,
+          </code>
         )
         remaining = remaining.slice(codeMatch[0].length)
         continue
@@ -83,10 +92,10 @@ export function MarkdownRenderer({ content, className, isStreaming = false }: Ma
             href={linkMatch[2]}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-emerald-600 hover:text-emerald-700 underline underline-offset-2 transition-colors"
+            className="text-emerald-600 underline underline-offset-2 transition-colors hover:text-emerald-700"
           >
             {linkMatch[1]}
-          </a>,
+          </a>
         )
         remaining = remaining.slice(linkMatch[0].length)
         continue
@@ -119,9 +128,12 @@ export function MarkdownRenderer({ content, className, isStreaming = false }: Ma
       const codeMatch = remaining.match(/^`([^`]+)`/)
       if (codeMatch) {
         elements.push(
-          <code key={keyIndex++} className="px-1.5 py-0.5 bg-stone-100 text-stone-700 rounded text-sm font-mono">
+          <code
+            key={keyIndex++}
+            className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-sm text-stone-700"
+          >
             {codeMatch[1]}
-          </code>,
+          </code>
         )
         remaining = remaining.slice(codeMatch[0].length)
         continue
@@ -138,7 +150,7 @@ export function MarkdownRenderer({ content, className, isStreaming = false }: Ma
               if (!word) return null
               return <AnalysisWordSpan key={`b-${keyIndex}-${i}`} word={word} />
             })}
-          </strong>,
+          </strong>
         )
         remaining = remaining.slice(boldMatch[0].length)
         continue
@@ -155,7 +167,7 @@ export function MarkdownRenderer({ content, className, isStreaming = false }: Ma
               if (!word) return null
               return <AnalysisWordSpan key={`i-${keyIndex}-${i}`} word={word} />
             })}
-          </em>,
+          </em>
         )
         remaining = remaining.slice(italicMatch[0].length)
         continue
@@ -170,10 +182,10 @@ export function MarkdownRenderer({ content, className, isStreaming = false }: Ma
             href={linkMatch[2]}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-emerald-600 hover:text-emerald-700 underline underline-offset-2 transition-colors"
+            className="text-emerald-600 underline underline-offset-2 transition-colors hover:text-emerald-700"
           >
             {linkMatch[1]}
-          </a>,
+          </a>
         )
         remaining = remaining.slice(linkMatch[0].length)
         continue
@@ -188,7 +200,7 @@ export function MarkdownRenderer({ content, className, isStreaming = false }: Ma
             if (word.match(/\s+/)) return word
             if (!word) return null
             return <AnalysisWordSpan key={`w-${keyIndex++}-${i}`} word={word} />
-          }),
+          })
         )
         break
       } else if (nextSpecial === 0) {
@@ -202,7 +214,7 @@ export function MarkdownRenderer({ content, className, isStreaming = false }: Ma
             if (word.match(/\s+/)) return word
             if (!word) return null
             return <AnalysisWordSpan key={`t-${keyIndex++}-${i}`} word={word} />
-          }),
+          })
         )
         remaining = remaining.slice(nextSpecial)
       }
@@ -214,19 +226,23 @@ export function MarkdownRenderer({ content, className, isStreaming = false }: Ma
   const renderCodeBlock = (part: string, partIndex: number) => {
     const codeContent = part.slice(3, -3)
     const firstNewline = codeContent.indexOf("\n")
-    const language = firstNewline > 0 ? codeContent.slice(0, firstNewline).trim() : ""
-    const code = firstNewline > 0 ? codeContent.slice(firstNewline + 1) : codeContent
+    const language =
+      firstNewline > 0 ? codeContent.slice(0, firstNewline).trim() : ""
+    const code =
+      firstNewline > 0 ? codeContent.slice(firstNewline + 1) : codeContent
 
     return (
       <pre
         key={partIndex}
-        className="my-2 p-3 bg-stone-900 text-stone-100 rounded-lg overflow-x-auto text-sm font-mono"
+        className="my-2 overflow-x-auto rounded-lg bg-stone-900 p-3 font-mono text-sm text-stone-100"
         style={{
           boxShadow:
             "rgba(14, 63, 126, 0.04) 0px 0px 0px 1px, rgba(42, 51, 69, 0.04) 0px 1px 1px -0.5px, rgba(42, 51, 70, 0.04) 0px 3px 3px -1.5px, rgba(42, 51, 70, 0.04) 0px 6px 6px -3px, rgba(14, 63, 126, 0.04) 0px 12px 12px -6px, rgba(14, 63, 126, 0.04) 0px 24px 24px -12px",
         }}
       >
-        {language && <span className="text-xs text-stone-400 block mb-2">{language}</span>}
+        {language && (
+          <span className="mb-2 block text-xs text-stone-400">{language}</span>
+        )}
         <code>{code}</code>
       </pre>
     )
@@ -252,7 +268,9 @@ export function MarkdownRenderer({ content, className, isStreaming = false }: Ma
   }
 
   return (
-    <div className={cn("text-sm whitespace-pre-wrap break-words", className)}>
+    <div
+      className={cn("text-sm wrap-break-word whitespace-pre-wrap", className)}
+    >
       {renderContent(staticContent, false)}
       {renderContent(animatingContent, true)}
     </div>
