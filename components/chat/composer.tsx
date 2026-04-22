@@ -2,7 +2,13 @@
 
 import type React from "react"
 
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react"
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react"
 import { cn } from "@/lib/utils"
 import { AnimatedOrb } from "./animated-orb"
 
@@ -22,9 +28,19 @@ export function Composer({
   placeholder = "Type a message... (Shift+Enter for new line)",
 }: ComposerProps) {
   const [value, setValue] = useState("")
-  const [hasAnimated, setHasAnimated] = useState(false)
   const [focused, setFocused] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const wasDisabledRef = useRef(disabled)
+
+  // Re-focus the textarea whenever the composer transitions from disabled
+  // back to enabled — keeps the user typing without an extra click after
+  // the assistant finishes its turn.
+  useEffect(() => {
+    if (wasDisabledRef.current && !disabled) {
+      textareaRef.current?.focus()
+    }
+    wasDisabledRef.current = disabled
+  }, [disabled])
 
   const handleFocus = useCallback(() => {
     setFocused(true)
@@ -35,10 +51,6 @@ export function Composer({
     setFocused(false)
     onFocusChange?.(false)
   }, [onFocusChange])
-
-  useEffect(() => {
-    setHasAnimated(true)
-  }, [])
 
   const autosize = useCallback(() => {
     const textarea = textareaRef.current
@@ -83,7 +95,7 @@ export function Composer({
   const canSend = value.trim().length > 0 && !disabled
 
   return (
-    <div className={cn("fixed bottom-4 left-0 right-0 px-4 pointer-events-none z-10", hasAnimated && "composer-intro")}>
+    <div className="composer-intro pointer-events-none fixed right-0 bottom-4 left-0 z-10 px-4">
       <div className="relative max-w-2xl mx-auto pointer-events-auto">
         <div
           data-active={focused}

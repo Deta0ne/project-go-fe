@@ -1,10 +1,9 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import type { Message } from "./chat-shell"
+import type { Message } from "@/types/chat"
 import { User } from "lucide-react"
 import { MarkdownRenderer } from "./markdown-renderer"
-import Image from "next/image"
 import { AnimatedOrb } from "./animated-orb"
 
 interface MessageBubbleProps {
@@ -17,24 +16,29 @@ function formatTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
-export function MessageBubble({ message, isStreaming = false }: MessageBubbleProps) {
+export function MessageBubble({
+  message,
+  isStreaming = false,
+}: MessageBubbleProps) {
   const isUser = message.role === "user"
 
   return (
     <div
       className={cn(
-        "flex max-w-[90%] md:max-w-[80%] gap-2",
+        "flex max-w-[90%] gap-2 md:max-w-[80%]",
         isUser
-          ? "ml-auto flex-row-reverse user-message-enter"
-          : "mr-auto animate-in fade-in slide-in-from-bottom-2 duration-300 items-end",
+          ? "user-message-enter ml-auto flex-row-reverse"
+          : "mr-auto animate-in items-end duration-300 fade-in slide-in-from-bottom-2"
       )}
     >
       {/* Avatar */}
       <div
         className={cn(
-          "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
           isUser ? "bg-white" : "bg-emerald-600",
-          !isUser && isStreaming && "sticky bottom-4 self-end transition-all duration-300",
+          !isUser &&
+            isStreaming &&
+            "sticky bottom-4 self-end transition-all duration-300"
         )}
         style={{
           boxShadow:
@@ -42,21 +46,29 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
         }}
         aria-hidden="true"
       >
-        {isUser ? <User className="w-4 h-4 text-stone-800" /> : <AnimatedOrb className="w-8 h-8 shrink-0" />}
+        {isUser ? (
+          <User className="h-4 w-4 text-stone-800" />
+        ) : (
+          <AnimatedOrb className="h-8 w-8 shrink-0" />
+        )}
       </div>
 
       {/* Message content */}
-      <div className={cn("flex flex-col", isUser ? "items-end" : "items-start")}>
+      <div
+        className={cn("flex flex-col", isUser ? "items-end" : "items-start")}
+      >
         {/* Role label (optional, shown on larger screens) */}
-        <span className="text-xs text-stone-400 mb-1 hidden sm:block mt-2">{isUser ? "You" : "Assistant"}</span>
+        <span className="mt-2 mb-1 hidden text-xs text-stone-400 sm:block">
+          {isUser ? "You" : "Assistant"}
+        </span>
 
         {/* Bubble */}
         <div
           className={cn(
-            "rounded-2xl border-none overflow-hidden",
+            "overflow-hidden rounded-2xl border-none",
             isUser
-              ? "bg-white text-stone-800 border border-stone-200 rounded-br-md"
-              : "bg-transparent text-stone-800 rounded-bl-md",
+              ? "rounded-br-md border border-stone-200 bg-white text-stone-800"
+              : "rounded-bl-md bg-transparent text-stone-800"
           )}
           style={{
             boxShadow: isUser
@@ -69,32 +81,27 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
           <div
             className={cn(isUser ? "px-4 py-3" : "py-1")}
             style={{
-              transition: "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease",
+              transition:
+                "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease",
             }}
           >
             {isUser ? (
-              <div className="flex flex-col gap-2">
-                {message.imageData && (
-                  <div className="w-20 h-20 rounded-lg overflow-hidden border border-stone-200">
-                    <Image
-                      src={message.imageData || "/placeholder.svg"}
-                      alt="Uploaded image"
-                      width={80}
-                      height={80}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-              </div>
+              <p className="text-sm wrap-break-word whitespace-pre-wrap">
+                {message.content}
+              </p>
             ) : (
-              <MarkdownRenderer content={message.content || " "} isStreaming={isStreaming} />
+              <MarkdownRenderer
+                content={message.content || " "}
+                isStreaming={isStreaming}
+              />
             )}
           </div>
         </div>
 
         {/* Timestamp */}
-        <span className="text-xs text-stone-400 mt-1">{formatTime(message.createdAt)}</span>
+        <span className="mt-1 text-xs text-stone-400">
+          {formatTime(message.createdAt)}
+        </span>
       </div>
     </div>
   )

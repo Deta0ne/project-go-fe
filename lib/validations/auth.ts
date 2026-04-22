@@ -1,13 +1,13 @@
 import { z } from "zod/v4"
 
 export const loginSchema = z.object({
-  email: z.email("Geçerli bir e-posta adresi girin"),
-  password: z.string().min(6, "Şifre en az 6 karakter olmalı"),
+  email: z.email("Enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 })
 
 export const registerSchema = z.object({
-  email: z.email("Geçerli bir e-posta adresi girin"),
-  password: z.string().min(6, "Şifre en az 6 karakter olmalı"),
+  email: z.email("Enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 })
 
 export type LoginInput = z.infer<typeof loginSchema>

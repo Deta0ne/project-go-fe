@@ -1,7 +1,7 @@
 import "server-only"
 
 const DEFAULT_BACKEND_BASE_URL = "http://localhost:8080"
-const REQUEST_TIMEOUT_MS = 8_000
+const REQUEST_TIMEOUT_MS = 120_000
 
 function normalizeBackendBaseUrl(rawUrl: string): string {
   const parsedUrl = new URL(rawUrl)
@@ -37,8 +37,11 @@ export async function fetchBackend(
   path: string,
   init?: RequestInit,
 ): Promise<Response> {
+  // Respect a caller-supplied signal (e.g. createProject's longer timeout
+  // for the OpenAI roadmap step) and only fall back to the default
+  // short timeout when no signal was provided.
   return fetch(buildBackendUrl(path), {
     ...init,
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    signal: init?.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   })
 }

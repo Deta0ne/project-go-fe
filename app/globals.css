@@ -168,6 +168,27 @@
   }
 }
 
+/* Blur-in entrance for headline / stage text — used by intake-processing.tsx
+ * and project-intake.tsx. Re-mount the element (e.g. via React `key`) to
+ * replay the animation. */
+@keyframes text-blur-intro {
+  0% {
+    filter: blur(12px);
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.text-blur-intro {
+  animation: text-blur-intro 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
 .composer-intro {
   animation: composer-intro 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
   opacity: 0;
@@ -426,7 +447,18 @@
     transparent 140deg,
     transparent 360deg
   );
-
+  /* Carve the gradient down to just the 1.5px ring between content-box
+   * and border-box. Both prefixed and standard properties are required:
+   * older Chromium honours -webkit-mask, modern Chrome/Safari/Firefox
+   * honour the standard `mask` + `mask-composite: exclude`. Removing
+   * either of the linear-gradient declarations leaves the full conic
+   * gradient visible inside the box. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   animation: composer-border-spin 3s linear infinite;

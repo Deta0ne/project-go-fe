@@ -27,17 +27,26 @@ export async function login(
     return { success: false, message: firstError.message }
   }
 
-  const res = await fetchBackend("/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(result.data),
-  })
+  let res: Response
+  try {
+    res = await fetchBackend("/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(result.data),
+    })
+  } catch (error) {
+    console.error("Login error:", error)
+    return {
+      success: false,
+      message: "Unable to connect to server. Please try again later.",
+    }
+  }
 
   if (!res.ok) {
     if (res.status === 401) {
-      return { success: false, message: "E-posta veya şifre hatalı" }
+      return { success: false, message: "Invalid email or password" }
     }
-    return { success: false, message: "Bir hata oluştu, tekrar deneyin" }
+    return { success: false, message: "An error occurred, please try again" }
   }
 
   const setCookieHeader = res.headers.getSetCookie()
@@ -83,39 +92,52 @@ export async function register(
     return { success: false, message: firstError.message }
   }
 
-  const res = await fetchBackend("/auth/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(result.data),
-  })
+  try {
+    const res = await fetchBackend("/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(result.data),
+    })
 
-  if (!res.ok) {
-    if (res.status === 409) {
-      return { success: false, message: "Bu e-posta adresi zaten kayıtlı" }
+    if (!res.ok) {
+      if (res.status === 409) {
+        return { success: false, message: "This email address is already registered" }
+      }
+      if (res.status === 400) {
+        return { success: false, message: "Invalid information, please check" }
+      }
+      return { success: false, message: "An error occurred, please try again" }
     }
-    if (res.status === 400) {
-      return { success: false, message: "Geçersiz bilgiler, kontrol edin" }
-    }
-    return { success: false, message: "Bir hata oluştu, tekrar deneyin" }
-  }
 
-  return {
-    success: true,
-    message: "Hesap oluşturuldu! Giriş yapabilirsiniz.",
+    return {
+      success: true,
+      message: "Account created! You can now login.",
+    }
+  } catch (error) {
+    console.error("Register error:", error)
+    return {
+      success: false,
+      message: "Unable to connect to server. Please try again later.",
+    }
   }
 }
 
 export async function logout(): Promise<void> {
   const token = await getAuthToken()
 
-  await fetchBackend("/auth/logout", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Cookie: `${AUTH_COOKIE_NAME}=${token}` } : {}),
-    },
-  })
+  try {
+    await fetchBackend("/auth/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Cookie: `${AUTH_COOKIE_NAME}=${token}` } : {}),
+      },
+    })
+  } catch (error) {
+    console.error("Logout error:", error)
+  } finally {
+    await clearAuthToken()
+  }
 
-  await clearAuthToken()
   redirect("/login")
 }
