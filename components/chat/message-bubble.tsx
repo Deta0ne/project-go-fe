@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import type { Message } from "./chat-shell"
+import type { Message } from "@/types/chat"
 import { User } from "lucide-react"
 import { MarkdownRenderer } from "./markdown-renderer"
 import { AnimatedOrb } from "./animated-orb"

@@ -20,7 +20,10 @@ export default function Page() {
         </form>
         <div className="flex flex-col gap-4 text-sm leading-loose">
           <Button asChild>
-            <Link href="/chat">Chat</Link>
+            <Link href="/projects/create">New project</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/projects">Projects</Link>
           </Button>
         </div>
       </div>
