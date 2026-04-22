@@ -4,12 +4,8 @@ import { useCallback, useMemo } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { Badge } from "@/components/ui/badge"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ChatTab } from "@/components/projects/chat/chat-tab"
 import { MembersTab } from "@/components/projects/members-tab"
 import { OverviewTab } from "@/components/projects/overview-tab"
 import { RoadmapTab } from "@/components/projects/roadmap-tab"
@@ -23,7 +19,7 @@ import type {
   User,
 } from "@/types/project"
 
-const TABS = ["overview", "tasks", "roadmap", "members"] as const
+const TABS = ["overview", "tasks", "roadmap", "members", "chat"] as const
 type Tab = (typeof TABS)[number]
 
 function asTab(value: string | null): Tab {
@@ -71,7 +67,7 @@ export function ProjectDetailShell({
       params.set("tab", tab)
       router.replace(`${pathname}?${params.toString()}`, { scroll: false })
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   )
 
   return (
@@ -95,6 +91,7 @@ export function ProjectDetailShell({
             </Badge>
           )}
         </TabsTrigger>
+        <TabsTrigger value="chat">Chat</TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview" className="pt-4">
@@ -129,6 +126,15 @@ export function ProjectDetailShell({
           users={users}
           role={role}
           meId={meId}
+        />
+      </TabsContent>
+
+      <TabsContent value="chat" className="pt-4">
+        <ChatTab
+          projectId={project.id}
+          meId={meId}
+          meEmail={meId ? (users.get(meId)?.email ?? null) : null}
+          role={role}
         />
       </TabsContent>
     </Tabs>
