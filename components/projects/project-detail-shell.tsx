@@ -113,6 +113,7 @@ export function ProjectDetailShell({
         <RoadmapTab
           projectId={project.id}
           roadmap={roadmap}
+          tasks={tasks}
           role={role}
           members={members}
           users={users}
@@ -134,6 +135,7 @@ export function ProjectDetailShell({
           projectId={project.id}
           meId={meId}
           meEmail={meId ? (users.get(meId)?.email ?? null) : null}
+          meUsername={meId ? (users.get(meId)?.username ?? null) : null}
           role={role}
         />
       </TabsContent>

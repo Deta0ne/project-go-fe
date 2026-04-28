@@ -4,6 +4,8 @@ import { useState, useTransition } from "react"
 import { Loader2, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { AnimatedOrb } from "@/components/chat/animated-orb"
+import { MarkdownRenderer } from "@/components/chat/markdown-renderer"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,8 +17,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { AGENT_DISPLAY_NAME, isAgentMessage } from "@/lib/agent"
 import { cn } from "@/lib/utils"
 import type { ChatMessage as ChatMessageT } from "@/types/message"
+
+import { MentionHighlight } from "./mention-highlight"
 
 interface ChatMessageProps {
   message: ChatMessageT
@@ -25,8 +30,8 @@ interface ChatMessageProps {
   onDelete: (id: string) => Promise<void>
 }
 
-function avatarInitial(email: string): string {
-  const trimmed = email?.trim() ?? ""
+function avatarInitial(nameOrEmail: string): string {
+  const trimmed = nameOrEmail?.trim() ?? ""
   return trimmed.length > 0 ? trimmed[0].toUpperCase() : "?"
 }
 
@@ -47,6 +52,7 @@ export function ChatMessage({
   const [error, setError] = useState<string | null>(null)
 
   const isOptimistic = message.id.startsWith("temp-")
+  const isAgent = isAgentMessage(message)
 
   const handleDelete = () => {
     setError(null)
@@ -70,11 +76,19 @@ export function ChatMessage({
       <div
         className={cn(
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium",
-          isMine ? "bg-stone-800 text-stone-50" : "bg-stone-200 text-stone-700"
+          isAgent
+            ? "bg-transparent"
+            : isMine
+              ? "bg-stone-800 text-stone-50"
+              : "bg-stone-200 text-stone-700",
         )}
         aria-hidden
       >
-        {avatarInitial(message.user_email)}
+        {isAgent ? (
+          <AnimatedOrb size={32} />
+        ) : (
+          avatarInitial(message.user_username || message.user_email)
+        )}
       </div>
 
       <div
@@ -90,7 +104,7 @@ export function ChatMessage({
           )}
         >
           <span className="font-medium text-stone-700">
-            {message.user_email || "Unknown"}
+            {isAgent ? AGENT_DISPLAY_NAME : message.user_username || message.user_email || "Unknown"}
           </span>
           <span className="text-stone-400">
             {formatTime(message.created_at)}
@@ -100,13 +114,26 @@ export function ChatMessage({
         <div
           className={cn(
             "rounded-2xl px-3 py-2 text-sm wrap-break-word whitespace-pre-wrap",
-            isMine
+            isAgent
+              ? "rounded-tl-sm border border-emerald-200 bg-emerald-50/70 text-stone-800"
+              : isMine
               ? "rounded-tr-sm bg-stone-800 text-stone-50"
               : "rounded-tl-sm bg-stone-100 text-stone-800",
             isOptimistic && "opacity-60"
           )}
         >
-          {message.content}
+          {isAgent ? (
+            <MarkdownRenderer content={message.content || " "} />
+          ) : (
+            <MentionHighlight
+              content={message.content}
+              mentionClassName={
+                isMine
+                  ? "font-medium text-emerald-200"
+                  : "font-medium text-emerald-700"
+              }
+            />
+          )}
         </div>
 
         {canDelete && !isOptimistic && (

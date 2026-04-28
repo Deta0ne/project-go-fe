@@ -1,6 +1,22 @@
-import { Calendar, GitBranch, Target, UserRound } from "lucide-react"
+"use client"
+
+import {
+  ArrowRight,
+  CalendarClock,
+  Flag,
+  GitBranch,
+  Hourglass,
+  Target,
+  UserRound,
+} from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import type {
   Roadmap,
   RoadmapItem,
@@ -9,144 +25,248 @@ import type {
 } from "@/types/project"
 
 const PRIORITY_LABEL: Record<TaskPriority, string> = {
-  low: "Low",
-  medium: "Medium",
-  high: "High",
+  low: "Low priority",
+  medium: "Medium priority",
+  high: "High priority",
 }
 
-function priorityBadgeClass(priority: TaskPriority): string {
+function priorityDotClass(priority: TaskPriority): string {
   switch (priority) {
     case "high":
-      return "bg-red-50 text-red-700 ring-red-200"
+      return "bg-red-500 ring-red-200"
     case "medium":
-      return "bg-amber-50 text-amber-700 ring-amber-200"
+      return "bg-amber-500 ring-amber-200"
     case "low":
-      return "bg-stone-100 text-stone-600 ring-stone-200"
+      return "bg-stone-400 ring-stone-200"
   }
 }
 
-function Chip({
-  children,
-  className,
+function priorityAccentClass(priority: TaskPriority): string {
+  switch (priority) {
+    case "high":
+      return "from-red-200/70 via-red-100/30"
+    case "medium":
+      return "from-amber-200/70 via-amber-100/30"
+    case "low":
+      return "from-stone-300/60 via-stone-200/30"
+  }
+}
+
+function pad2(n: number): string {
+  return n.toString().padStart(2, "0")
+}
+
+/**
+ * Compact metadata pill used inside the card. Less visual weight than the
+ * older Chip badge — uses muted icon + label and only adds a ring on hover.
+ */
+function MetaPill({
+  icon: Icon,
+  label,
+  tooltip,
 }: {
-  children: React.ReactNode
-  className?: string
+  icon: React.ComponentType<{ className?: string }>
+  label: React.ReactNode
+  tooltip: string
 }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
-        "bg-stone-50 text-stone-600 ring-stone-200",
-        className
-      )}
-    >
-      {children}
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-stone-500 ring-1 ring-transparent transition-colors hover:bg-stone-100 hover:text-stone-700 hover:ring-stone-200">
+          <Icon className="h-3 w-3" />
+          {label}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{tooltip}</TooltipContent>
+    </Tooltip>
   )
 }
 
-function MilestoneCard({
+function ItemCard({
+  item,
+  index,
+  renderAction,
+}: {
+  item: RoadmapItem
+  index: number
+  renderAction?: (item: RoadmapItem) => React.ReactNode
+}) {
+  return (
+    <li
+      className={cn(
+        "group relative overflow-hidden rounded-xl border border-stone-200/80 bg-white p-4",
+        "shadow-[0_1px_0_rgba(0,0,0,0.02),0_4px_12px_-8px_rgba(0,0,0,0.08)]",
+        "transition-all duration-200 hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_2px_0_rgba(0,0,0,0.02),0_12px_24px_-12px_rgba(0,0,0,0.18)]"
+      )}
+    >
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-x-0 -top-px h-px bg-linear-to-r to-transparent opacity-80",
+          priorityAccentClass(item.priority)
+        )}
+      />
+
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <div className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.12em] text-stone-400 uppercase">
+            <span className="font-mono text-stone-400">T·{pad2(index + 1)}</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className={cn(
+                    "inline-flex h-2 w-2 rounded-full ring-2",
+                    priorityDotClass(item.priority)
+                  )}
+                  aria-label={PRIORITY_LABEL[item.priority]}
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                <span className="flex items-center gap-1.5">
+                  <Flag className="h-3 w-3" />
+                  {PRIORITY_LABEL[item.priority]}
+                </span>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          <h4 className="text-[15px] leading-snug font-semibold text-stone-900">
+            {item.title}
+          </h4>
+
+          {item.description && (
+            <p className="mt-0.5 text-[13px] leading-relaxed whitespace-pre-wrap text-stone-600">
+              {item.description}
+            </p>
+          )}
+
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-1 gap-y-1 -ml-1.5">
+            <MetaPill
+              icon={Hourglass}
+              label={`${item.estimated_days}d`}
+              tooltip={`Estimated ${item.estimated_days} day${item.estimated_days === 1 ? "" : "s"}`}
+            />
+            {item.suggested_role && (
+              <MetaPill
+                icon={Target}
+                label={item.suggested_role}
+                tooltip={`Suggested role: ${item.suggested_role}`}
+              />
+            )}
+            {item.suggested_assignee_label && (
+              <MetaPill
+                icon={UserRound}
+                label={item.suggested_assignee_label}
+                tooltip={`Suggested assignee: ${item.suggested_assignee_label}`}
+              />
+            )}
+          </div>
+
+          {item.depends_on.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span className="inline-flex items-center gap-1 text-stone-400">
+                <GitBranch className="h-3 w-3" />
+                depends on
+              </span>
+              {item.depends_on.map((dep) => (
+                <Tooltip key={dep}>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex max-w-[220px] items-center gap-1 truncate rounded-md bg-stone-100 px-1.5 py-0.5 font-medium text-stone-600 ring-1 ring-stone-200/80">
+                      <ArrowRight className="h-2.5 w-2.5 shrink-0 text-stone-400" />
+                      <span className="truncate">{dep}</span>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>{dep}</TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {renderAction && <div className="shrink-0">{renderAction(item)}</div>}
+      </div>
+    </li>
+  )
+}
+
+function MilestoneSection({
   index,
   milestone,
+  items,
+  renderItemAction,
 }: {
   index: number
   milestone: RoadmapMilestone
+  items: readonly RoadmapItem[]
+  renderItemAction?: (
+    item: RoadmapItem,
+    milestoneTitle: string | null
+  ) => React.ReactNode
 }) {
   return (
-    <li className="flex gap-4 rounded-2xl border border-stone-200 bg-white/70 p-4">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-semibold text-stone-600">
-        {index + 1}
+    <li className="relative pl-14">
+      <div className="absolute top-0.5 left-0 flex flex-col items-center">
+        <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-stone-900 text-[11px] font-semibold tracking-wider text-stone-100 shadow-md ring-4 ring-white">
+          <span className="font-mono">{pad2(index + 1)}</span>
+        </div>
       </div>
-      <div className="flex min-w-0 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-sm font-medium text-stone-800">
-            {milestone.title}
-          </h3>
+
+      <div className="rounded-2xl border border-stone-200/80 bg-white/70 p-5 backdrop-blur-sm">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <span className="text-[10px] font-semibold tracking-[0.16em] text-stone-400 uppercase">
+              Milestone {pad2(index + 1)}
+            </span>
+            <h3 className="text-base font-semibold text-stone-900">
+              {milestone.title}
+            </h3>
+          </div>
           {milestone.estimated_duration && (
-            <Chip>
-              <Calendar className="h-3 w-3" />
-              {milestone.estimated_duration}
-            </Chip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-900/5 px-2.5 py-1 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5">
+                  <CalendarClock className="h-3 w-3" />
+                  {milestone.estimated_duration}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Estimated duration</TooltipContent>
+            </Tooltip>
           )}
         </div>
+
         {milestone.description && (
-          <p className="text-sm whitespace-pre-wrap text-stone-600">
+          <p className="mt-2 text-[13px] leading-relaxed whitespace-pre-wrap text-stone-600">
             {milestone.description}
           </p>
+        )}
+
+        {items.length > 0 && (
+          <ul className="mt-4 flex flex-col gap-2.5">
+            {items.map((item, itemIdx) => (
+              <ItemCard
+                key={`${index}-${itemIdx}-${item.title}`}
+                item={item}
+                index={itemIdx}
+                renderAction={
+                  renderItemAction
+                    ? (it) => renderItemAction(it, milestone.title)
+                    : undefined
+                }
+              />
+            ))}
+          </ul>
         )}
       </div>
     </li>
   )
 }
 
-function ItemCard({
-  item,
-  renderAction,
-}: {
-  item: RoadmapItem
-  renderAction?: (item: RoadmapItem) => React.ReactNode
-}) {
-  return (
-    <li className="flex flex-col gap-2 rounded-2xl border border-stone-200 bg-white/70 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <h4 className="text-sm font-medium text-stone-800">{item.title}</h4>
-          <Chip className={priorityBadgeClass(item.priority)}>
-            {PRIORITY_LABEL[item.priority]}
-          </Chip>
-          <Chip>
-            <Calendar className="h-3 w-3" />
-            {item.estimated_days} days
-          </Chip>
-          {item.suggested_role && (
-            <Chip>
-              <Target className="h-3 w-3" />
-              {item.suggested_role}
-            </Chip>
-          )}
-          {item.suggested_assignee_label && (
-            <Chip>
-              <UserRound className="h-3 w-3" />
-              {item.suggested_assignee_label}
-            </Chip>
-          )}
-        </div>
-        {renderAction?.(item)}
-      </div>
-
-      {item.description && (
-        <p className="text-sm whitespace-pre-wrap text-stone-600">
-          {item.description}
-        </p>
-      )}
-
-      {item.depends_on.length > 0 && (
-        <div className="mt-1 flex items-start gap-2 text-xs text-stone-500">
-          <GitBranch className="mt-0.5 h-3 w-3 shrink-0" />
-          <div className="flex flex-col gap-0.5">
-            <span className="font-medium text-stone-600">Dependencies</span>
-            <ul className="flex flex-col gap-0.5">
-              {item.depends_on.map((dep) => (
-                <li key={dep}>· {dep}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-    </li>
-  )
-}
-
 interface RoadmapViewProps {
   roadmap: Roadmap
-  // Optional per-item action slot (e.g. "Add as task" on the roadmap tab).
-  // Keeping it as a render prop lets callers inject a client component
-  // without forcing this file to be a client component.
   renderItemAction?: (
     item: RoadmapItem,
     milestoneTitle: string | null
   ) => React.ReactNode
-  // Header slot for extra content (e.g. regenerate button) on the right side.
   headerAction?: React.ReactNode
 }
 
@@ -157,10 +277,8 @@ export function RoadmapView({
 }: RoadmapViewProps) {
   const { summary, milestones, items } = roadmap.payload
 
-  // Group items by milestone_index so the reader can see which task belongs
-  // to which milestone at a glance. Guard against out-of-range indices so a
-  // bad AI payload never breaks the page.
-  // Backend sends 1-indexed milestone_index (1, 2, 3...), convert to 0-indexed.
+  // Group items by milestone_index. Backend sends 1-indexed values; convert
+  // to 0-indexed and route out-of-range entries to an "Other" bucket.
   const itemsByMilestone = new Map<number, RoadmapItem[]>()
   const orphanItems: RoadmapItem[] = []
   items.forEach((item) => {
@@ -174,89 +292,95 @@ export function RoadmapView({
     itemsByMilestone.set(idx, bucket)
   })
 
+  const totalDays = items.reduce(
+    (sum, item) => sum + (item.estimated_days || 0),
+    0
+  )
+
   return (
-    <section className="flex flex-col gap-6">
-      <header className="flex items-baseline justify-between gap-4">
-        <div>
-          <h2 className="text-xs font-medium tracking-wide text-stone-400 uppercase">
-            Roadmap
-          </h2>
-          <p className="mt-1 text-xs text-stone-400">model · {roadmap.model}</p>
-        </div>
-        {headerAction && <div className="shrink-0">{headerAction}</div>}
-      </header>
+    <TooltipProvider delayDuration={150}>
+      <section className="flex flex-col gap-6">
+        <header className="flex flex-wrap items-end justify-between gap-4 border-b border-stone-200/80 pb-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold tracking-[0.16em] text-stone-400 uppercase">
+              Project Roadmap
+            </span>
+            <h2 className="text-xl font-semibold text-stone-900">
+              {milestones.length} milestone{milestones.length === 1 ? "" : "s"}
+              <span className="mx-2 text-stone-300">·</span>
+              <span className="text-stone-500">
+                {items.length} task{items.length === 1 ? "" : "s"}
+              </span>
+              {totalDays > 0 && (
+                <>
+                  <span className="mx-2 text-stone-300">·</span>
+                  <span className="font-mono text-sm text-stone-500">
+                    ≈ {totalDays}d
+                  </span>
+                </>
+              )}
+            </h2>
+            <p className="text-xs text-stone-400">
+              Generated by{" "}
+              <span className="font-mono text-stone-500">{roadmap.model}</span>
+            </p>
+          </div>
+          {headerAction && <div className="shrink-0">{headerAction}</div>}
+        </header>
 
-      {summary && (
-        <p className="text-sm whitespace-pre-wrap text-stone-700">{summary}</p>
-      )}
+        {summary && (
+          <p className="text-sm leading-relaxed whitespace-pre-wrap text-stone-700">
+            {summary}
+          </p>
+        )}
 
-      {milestones.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h3 className="text-xs font-medium tracking-wide text-stone-400 uppercase">
-            Milestones
-          </h3>
-          <ol className="flex flex-col gap-3">
-            {milestones.map((milestone, index) => (
-              <MilestoneCard
-                key={`${index}-${milestone.title}`}
-                index={index}
-                milestone={milestone}
-              />
-            ))}
-          </ol>
-        </div>
-      )}
+        {milestones.length > 0 && (
+          <div className="relative">
+            <div
+              aria-hidden
+              className="absolute top-2 bottom-2 left-5 w-px bg-linear-to-b from-stone-300 via-stone-200 to-transparent"
+            />
+            <ol className="relative flex flex-col gap-5">
+              {milestones.map((milestone, index) => (
+                <MilestoneSection
+                  key={`${index}-${milestone.title}`}
+                  index={index}
+                  milestone={milestone}
+                  items={itemsByMilestone.get(index) ?? []}
+                  renderItemAction={renderItemAction}
+                />
+              ))}
+            </ol>
 
-      {milestones.length > 0 && (
-        <div className="flex flex-col gap-4">
-          <h3 className="text-xs font-medium tracking-wide text-stone-400 uppercase">
-            Tasks
-          </h3>
-          {milestones.map((milestone, index) => {
-            const bucket = itemsByMilestone.get(index) ?? []
-            if (bucket.length === 0) return null
-            return (
-              <div key={`bucket-${index}`} className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-stone-700">
-                  {index + 1}. {milestone.title}
-                </p>
-                <ul className="flex flex-col gap-2">
-                  {bucket.map((item, itemIdx) => (
-                    <ItemCard
-                      key={`${index}-${itemIdx}-${item.title}`}
-                      item={item}
-                      renderAction={
-                        renderItemAction
-                          ? (it) => renderItemAction(it, milestone.title)
-                          : undefined
-                      }
-                    />
-                  ))}
-                </ul>
+            {orphanItems.length > 0 && (
+              <div className="relative mt-5 pl-14">
+                <div className="absolute top-1 left-0 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[11px] font-semibold text-stone-500 shadow-sm ring-4 ring-white">
+                  <span className="font-mono">··</span>
+                </div>
+                <div className="rounded-2xl border border-dashed border-stone-200 bg-white/50 p-5">
+                  <span className="text-[10px] font-semibold tracking-[0.16em] text-stone-400 uppercase">
+                    Other
+                  </span>
+                  <ul className="mt-3 flex flex-col gap-2.5">
+                    {orphanItems.map((item, idx) => (
+                      <ItemCard
+                        key={`orphan-${idx}-${item.title}`}
+                        item={item}
+                        index={idx}
+                        renderAction={
+                          renderItemAction
+                            ? (it) => renderItemAction(it, null)
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </ul>
+                </div>
               </div>
-            )
-          })}
-
-          {orphanItems.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium text-stone-700">Other</p>
-              <ul className="flex flex-col gap-2">
-                {orphanItems.map((item, idx) => (
-                  <ItemCard
-                    key={`orphan-${idx}-${item.title}`}
-                    item={item}
-                    renderAction={
-                      renderItemAction
-                        ? (it) => renderItemAction(it, null)
-                        : undefined
-                    }
-                  />
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-    </section>
+            )}
+          </div>
+        )}
+      </section>
+    </TooltipProvider>
   )
 }

@@ -1,24 +1,31 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useProjectChat } from "@/hooks/useProjectChat"
+import { hasAgentMention, isAgentMessage } from "@/lib/agent"
 import { cn } from "@/lib/utils"
 import type { Role } from "@/types/project"
 
 import { ChatComposer } from "./chat-composer"
 import { ChatMessage } from "./chat-message"
+import { SamaritanThinking } from "./samaritan-thinking"
 
 interface ChatTabProps {
   projectId: string
   meId: string | null
   meEmail: string | null
+  meUsername: string | null
   role: Role | null
 }
 
-export function ChatTab({ projectId, meId, meEmail, role }: ChatTabProps) {
+const AGENT_RESPONSE_TIMEOUT_MS = 60_000
+
+export function ChatTab({ projectId, meId, meEmail, meUsername, role }: ChatTabProps) {
+  const router = useRouter()
   const {
     messages,
     loading,
@@ -29,21 +36,101 @@ export function ChatTab({ projectId, meId, meEmail, role }: ChatTabProps) {
     loadOlder,
     send,
     remove,
-  } = useProjectChat(projectId, { meId, meEmail })
+  } = useProjectChat(projectId, { meId, meEmail, meUsername })
 
+  const [awaitingAgent, setAwaitingAgent] = useState(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  const mountedAtRef = useRef<number | null>(null)
   const lastMessageIdRef = useRef<string | null>(null)
+  const awaitingSinceRef = useRef<number | null>(null)
+  const lastAgentMessageIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    mountedAtRef.current = Date.now()
+  }, [])
+
+  const searchParams = useSearchParams()
+  const activeTab = searchParams.get("tab") || "overview"
 
   // Auto-scroll to bottom on new tail messages, but not when we prepend older
   // history (loadOlder). We key off the *last* message id.
   useEffect(() => {
-    if (messages.length === 0) return
+    if (loading || messages.length === 0) return
     const last = messages[messages.length - 1]
     if (last.id === lastMessageIdRef.current) return
     lastMessageIdRef.current = last.id
-    const el = scrollRef.current
-    if (el) el.scrollTop = el.scrollHeight
-  }, [messages])
+    
+    requestAnimationFrame(() => {
+      const el = scrollRef.current
+      if (el) el.scrollTop = el.scrollHeight
+    })
+
+    if (!isAgentMessage(last) || last.id === lastAgentMessageIdRef.current) {
+      return
+    }
+
+    lastAgentMessageIdRef.current = last.id
+    const createdAt = new Date(last.created_at).getTime()
+    const mountedAt = mountedAtRef.current
+    const isFreshAgentMessage =
+      mountedAt !== null && !Number.isNaN(createdAt) && createdAt >= mountedAt
+
+    if (isFreshAgentMessage) {
+      router.refresh()
+    }
+
+    const pendingSince = awaitingSinceRef.current
+    if (!pendingSince) return
+    if (!Number.isNaN(createdAt) && createdAt >= pendingSince) {
+      awaitingSinceRef.current = null
+      setTimeout(() => setAwaitingAgent(false), 0)
+    }
+  }, [messages, router, loading])
+
+  // Force scroll to bottom when returning to the chat tab
+  useEffect(() => {
+    if (activeTab === "chat" && !loading && messages.length > 0) {
+      requestAnimationFrame(() => {
+        const el = scrollRef.current
+        if (el) el.scrollTop = el.scrollHeight
+      })
+    }
+  }, [activeTab, loading, messages.length])
+
+  useEffect(() => {
+    if (!awaitingAgent) return
+    const timer = setTimeout(() => {
+      setAwaitingAgent(false)
+      awaitingSinceRef.current = null
+    }, AGENT_RESPONSE_TIMEOUT_MS)
+    return () => clearTimeout(timer)
+  }, [awaitingAgent])
+
+  useEffect(() => {
+    return () => {
+      awaitingSinceRef.current = null
+    }
+  }, [])
+
+  const handleSend = useCallback(
+    async (content: string) => {
+      const expectsAgent = hasAgentMention(content)
+      if (expectsAgent) {
+        awaitingSinceRef.current = Date.now()
+        setAwaitingAgent(true)
+      }
+      try {
+        await send(content)
+      } catch (e) {
+        if (expectsAgent) {
+          awaitingSinceRef.current = null
+          setAwaitingAgent(false)
+        }
+        throw e
+      }
+    },
+    [send],
+  )
 
   const isMember = role !== null
 
@@ -69,20 +156,7 @@ export function ChatTab({ projectId, meId, meEmail, role }: ChatTabProps) {
           </span>
         </div>
 
-        {hasMore && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => void loadOlder()}
-            disabled={loadingOlder}
-          >
-            {loadingOlder ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              "Load older"
-            )}
-          </Button>
-        )}
+
       </div>
 
       <div
@@ -114,12 +188,17 @@ export function ChatTab({ projectId, meId, meEmail, role }: ChatTabProps) {
                 />
               </li>
             ))}
+            {awaitingAgent && (
+              <li>
+                <SamaritanThinking />
+              </li>
+            )}
           </ul>
         )}
       </div>
 
       {isMember ? (
-        <ChatComposer onSend={send} disabled={loading} />
+        <ChatComposer onSend={handleSend} disabled={loading} />
       ) : (
         <p className="rounded-2xl border border-dashed border-stone-200 px-4 py-3 text-center text-sm text-stone-500">
           Only project members can send messages.

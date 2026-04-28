@@ -37,3 +37,13 @@ import { Button } from "@/components/ui/button";
   the browser uses relative paths that hit the Next.js rewrites described
   above. When set, the backend must be configured with `ALLOWED_ORIGINS`
   including the FE origin, `COOKIE_SAMESITE=None`, and `COOKIE_SECURE=true`.
+- `NEXT_PUBLIC_AGENT_USER_ID` — optional override for the chat agent user id
+  used for UI rendering (default: `01J000000000000000SAMARIT`).
+- `NEXT_PUBLIC_AGENT_USER_EMAIL` — optional override for the chat agent email
+  used for UI rendering (default: `samaritan@agent.local`).
+- `NEXT_PUBLIC_AGENT_HANDLE` — optional override for mention handle used by FE
+  highlighting and helper actions (default: `Samaritan`).
+
+Agent overrides must stay aligned with backend `AGENT_*` settings. If they
+diverge, mention detection and agent message rendering in the chat UI may break.
+hello world

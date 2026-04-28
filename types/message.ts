@@ -6,4 +6,5 @@ export interface ChatMessage {
   created_at: string
   edited_at?: string | null
   user_email: string
+  user_username?: string
 }

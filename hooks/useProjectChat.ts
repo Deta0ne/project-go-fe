@@ -17,6 +17,7 @@ export type ConnectionStatus = "connecting" | "open" | "closed"
 interface UseProjectChatOptions {
   meId: string | null
   meEmail: string | null
+  meUsername: string | null
 }
 
 export interface UseProjectChatResult {
@@ -42,7 +43,7 @@ async function parseError(res: Response): Promise<string> {
 
 export function useProjectChat(
   projectId: string,
-  { meId, meEmail }: UseProjectChatOptions,
+  { meId, meEmail, meUsername }: UseProjectChatOptions,
 ): UseProjectChatResult {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(true)
@@ -225,6 +226,7 @@ export function useProjectChat(
           content: trimmed,
           created_at: new Date().toISOString(),
           user_email: meEmail ?? "",
+          user_username: meUsername ?? undefined,
         }
         setMessages((prev) => [...prev, optimistic])
       }
@@ -251,7 +253,7 @@ export function useProjectChat(
         throw e
       }
     },
-    [projectId, meId, meEmail],
+    [projectId, meId, meEmail, meUsername],
   )
 
   const remove = useCallback(
