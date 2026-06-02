@@ -61,7 +61,7 @@ export default async function ProjectDetailPage({
       }
 
   return (
-    <main className="mx-auto flex h-full w-full max-w-4xl flex-col gap-6 overflow-y-auto px-6 py-10">
+    <main className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6 overflow-y-auto px-6 py-10">
       <ProjectHeader
         project={project}
         role={role}

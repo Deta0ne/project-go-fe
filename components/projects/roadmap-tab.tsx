@@ -1,9 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { ListPlus } from "lucide-react"
+import { useMemo, useState } from "react"
+import { Check, ListPlus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { RegenerateRoadmapButton } from "@/components/projects/regenerate-roadmap-button"
 import { RoadmapView } from "@/components/projects/roadmap-view"
 import {
@@ -16,15 +21,21 @@ import type {
   Roadmap,
   RoadmapItem,
   Role,
+  Task,
   User,
 } from "@/types/project"
 
 interface RoadmapTabProps {
   projectId: string
   roadmap: Roadmap | null
+  tasks: readonly Task[]
   role: Role | null
   members: readonly Membership[]
   users: ReadonlyMap<string, User>
+}
+
+function normalizeTitle(title: string): string {
+  return title.trim().toLowerCase()
 }
 
 function buildPrefill(
@@ -54,12 +65,17 @@ function buildPrefill(
 export function RoadmapTab({
   projectId,
   roadmap,
+  tasks,
   role,
   members,
   users,
 }: RoadmapTabProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [prefill, setPrefill] = useState<TaskFormPrefill | undefined>()
+  const existingTitles = useMemo(
+    () => new Set(tasks.map((task) => normalizeTitle(task.title))),
+    [tasks]
+  )
 
   const canAdd = canCreateTask(role)
 
@@ -85,21 +101,56 @@ export function RoadmapTab({
         }
         renderItemAction={
           canAdd
-            ? (item, milestoneTitle) => (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setPrefill(buildPrefill(item, milestoneTitle))
-                    setDialogOpen(true)
-                  }}
-                  className="h-7 shrink-0 px-2 text-xs"
-                >
-                  <ListPlus className="h-3.5 w-3.5" />
-                  Add as task
-                </Button>
-              )
+            ? (item, milestoneTitle) => {
+                const isAlreadyAdded = existingTitles.has(normalizeTitle(item.title))
+
+                const button = (
+                  <Button
+                    type="button"
+                    variant={isAlreadyAdded ? "ghost" : "outline"}
+                    size="sm"
+                    disabled={isAlreadyAdded}
+                    onClick={() => {
+                      setPrefill(buildPrefill(item, milestoneTitle))
+                      setDialogOpen(true)
+                    }}
+                    className={
+                      isAlreadyAdded
+                        ? "h-7 shrink-0 px-2 text-xs text-emerald-600 disabled:opacity-100"
+                        : "h-7 shrink-0 px-2 text-xs"
+                    }
+                  >
+                    {isAlreadyAdded ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <ListPlus className="h-3.5 w-3.5" />
+                    )}
+                    {isAlreadyAdded ? "Added" : "Add as task"}
+                  </Button>
+                )
+
+                if (isAlreadyAdded) {
+                  return (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span tabIndex={0}>{button}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        This roadmap item is already a project task.
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                }
+
+                return (
+                  <Tooltip>
+                    <TooltipTrigger asChild>{button}</TooltipTrigger>
+                    <TooltipContent>
+                      Create a project task from this roadmap item
+                    </TooltipContent>
+                  </Tooltip>
+                )
+              }
             : undefined
         }
       />

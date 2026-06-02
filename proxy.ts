@@ -9,11 +9,11 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get(AUTH_COOKIE_NAME)
   const { pathname } = request.nextUrl
 
-  if (token && authRoutes.includes(pathname)) {
-    return NextResponse.redirect(new URL("/", request.url))
+  if (token && authRoutes.includes(pathname) && pathname !== "/") {
+    return NextResponse.redirect(new URL("/home", request.url))
   }
 
-  if (!token && !authRoutes.includes(pathname)) {
+  if (!token && !authRoutes.includes(pathname) && pathname !== "/") {
     return NextResponse.redirect(new URL("/login", request.url))
   }
 

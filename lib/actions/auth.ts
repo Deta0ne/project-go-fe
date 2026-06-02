@@ -74,7 +74,7 @@ export async function login(
     }
   }
 
-  redirect("/")
+  redirect("/home")
 }
 
 export async function register(
@@ -84,6 +84,7 @@ export async function register(
   const raw = {
     email: formData.get("email"),
     password: formData.get("password"),
+    username: formData.get("username"),
   }
 
   const result = registerSchema.safeParse(raw)
@@ -101,7 +102,7 @@ export async function register(
 
     if (!res.ok) {
       if (res.status === 409) {
-        return { success: false, message: "This email address is already registered" }
+        return { success: false, message: "Username or email already exists" }
       }
       if (res.status === 400) {
         return { success: false, message: "Invalid information, please check" }
@@ -139,5 +140,5 @@ export async function logout(): Promise<void> {
     await clearAuthToken()
   }
 
-  redirect("/login")
+  redirect("/")
 }

@@ -47,13 +47,13 @@ function roleBadgeVariant(role: Role): "info" | "secondary" | "outline" {
   return "outline"
 }
 
-function Initial({ email }: { email: string }) {
+function Initial({ displayName }: { displayName: string }) {
   return (
     <span
       aria-hidden
       className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-medium text-stone-600"
     >
-      {email.slice(0, 1).toUpperCase()}
+      {displayName.slice(0, 1).toUpperCase()}
     </span>
   )
 }
@@ -127,7 +127,7 @@ export function MemberRow({
     })
   }
 
-  const email = user?.email ?? `${member.user_id.slice(-8)}`
+  const displayName = user?.username ?? user?.email ?? `${member.user_id.slice(-8)}`
 
   return (
     <li
@@ -136,11 +136,11 @@ export function MemberRow({
         isMe && "bg-stone-50/80"
       )}
     >
-      <Initial email={email} />
+      <Initial displayName={displayName} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate text-sm font-medium text-stone-800">{email}</p>
+          <p className="truncate text-sm font-medium text-stone-800">{displayName}</p>
           {isMe && <Badge variant="outline">You</Badge>}
         </div>
         <p className="font-mono text-[11px] text-stone-400">{member.user_id}</p>
@@ -193,7 +193,7 @@ export function MemberRow({
               <AlertDialogHeader>
                 <AlertDialogTitle>Remove member</AlertDialogTitle>
                 <AlertDialogDescription>
-                  <span className="font-medium text-foreground">{email}</span>{" "}
+                  <span className="font-medium text-foreground">{displayName}</span>{" "}
                   will be removed from this project.
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -236,7 +236,7 @@ export function MemberRow({
           <AlertDialogHeader>
             <AlertDialogTitle>Transfer ownership</AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="font-medium text-foreground">{email}</span> will
+              <span className="font-medium text-foreground">{displayName}</span> will
               become the new owner of the project. You will automatically be
               assigned the co-owner role. This action can be undone but must be
               done by the new owner.

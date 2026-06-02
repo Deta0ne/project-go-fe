@@ -20,7 +20,7 @@ interface AddMemberFormProps {
 }
 
 export function AddMemberForm({ projectId }: AddMemberFormProps) {
-  const [userId, setUserId] = useState("")
+  const [username, setUsername] = useState("")
   const [role, setRole] = useState<"member" | "co_owner">("member")
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -31,9 +31,9 @@ export function AddMemberForm({ projectId }: AddMemberFormProps) {
     setError(null)
 
     startTransition(async () => {
-      const res = await addMember(projectId, { user_id: userId.trim(), role })
+      const res = await addMember(projectId, { username: username.trim(), role })
       if (res.ok) {
-        setUserId("")
+        setUsername("")
         setRole("member")
         return
       }
@@ -49,20 +49,20 @@ export function AddMemberForm({ projectId }: AddMemberFormProps) {
       <div className="flex flex-col gap-1">
         <h3 className="text-sm font-medium text-stone-800">Add member</h3>
         <p className="text-xs text-stone-500">
-          Copy the user ID and paste it here to invite a user.
+          Enter the username here to invite a user.
         </p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="member-user-id">User ID</Label>
+          <Label htmlFor="member-username">Username</Label>
           <Input
-            id="member-user-id"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder="01K9..."
+            id="member-username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="johndoe"
             required
-            maxLength={26}
+            maxLength={30}
             autoComplete="off"
           />
         </div>
@@ -83,7 +83,7 @@ export function AddMemberForm({ projectId }: AddMemberFormProps) {
           </Select>
         </div>
 
-        <Button type="submit" disabled={isPending || !userId.trim()}>
+        <Button type="submit" disabled={isPending || !username.trim()}>
           {isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
