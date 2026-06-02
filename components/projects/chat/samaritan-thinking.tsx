@@ -9,7 +9,7 @@ export function SamaritanThinking() {
       <div className="shrink-0">
         <AnimatedOrb size={32} />
       </div>
-      <div className="rounded-2xl rounded-tl-sm border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-sm text-stone-700">
+      <div className="rounded-2xl rounded-tl-sm border border-emerald-200 bg-primary px-3 py-2 text-sm text-stone-50">
         <div className="mb-1">{AGENT_DISPLAY_NAME} is thinking...</div>
         <div
           className="flex items-center gap-1"

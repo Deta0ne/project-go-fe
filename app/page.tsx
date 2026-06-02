@@ -1,94 +1,73 @@
+import { BubbleField } from "@/components/chat/bubble-field"
+import { Orb } from "@/components/orb-example"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { logout } from "@/lib/actions/auth"
-import { Files, PlusCircle, LogOut, LucideIcon } from "lucide-react"
+import { HERO_GREETING } from "@/lib/constants/intake"
+import { getAuthToken } from "@/lib/server/auth-cookie"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 
-interface QuickActionProps {
-  icon: LucideIcon
-  title: string
-  description: string
-  href: string
-  variant?: "default" | "secondary"
-}
+export default async function LandingPage() {
+  const token = await getAuthToken()
+  if (token) {
+    redirect("/home")
+  }
 
-function QuickActionCard({ icon: Icon, title, description, href, variant = "default" }: QuickActionProps) {
   return (
-    <Button
-      asChild
-      variant={variant}
-      className="h-auto w-full justify-start p-4 transition-all hover:scale-[1.02]"
-    >
-      <Link href={href} className="flex flex-col items-center text-center sm:flex-row sm:text-left gap-3">
-        <Icon className="h-6 w-6 opacity-80 shrink-0" />
-        <div className="flex-1">
-          <div className="font-semibold">{title}</div>
-          <div className="text-xs opacity-80 mt-1">{description}</div>
-        </div>
-      </Link>
-    </Button>
-  )
-}
+    <main className="relative isolate flex min-h-svh items-center justify-center overflow-hidden px-6 py-10">
+      <BubbleField />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,156,247,0.20)_0%,transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.04)_1px,transparent_1px)] bg-size-[4px_4px]" />
 
-export default function Page() {
-  return (
-    <div className="container mx-auto flex min-h-svh flex-col items-center justify-center p-6">
-      <div className="w-full max-w-3xl space-y-8">
-        {/* Welcome Section */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            Welcome back!
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Manage your projects and collaborate with your team in real-time
-          </p>
+      <header className="absolute inset-x-6 top-6 z-20 flex items-center justify-between">
+        <Link
+          href="/"
+          className="group inline-flex items-center gap-2 text-sm font-medium tracking-wide text-foreground/90"
+        >
+          <span className="rounded-full border border-border/70 p-1">
+            <Orb size={12} />
+          </span>
+          <span className="transition-colors group-hover:text-foreground">
+            project-go
+          </span>
+        </Link>
+        <Button asChild variant="ghost" className="rounded-full px-5">
+          <Link href="/login">Sign in</Link>
+        </Button>
+      </header>
+
+      <section className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center text-center">
+        <div className="composer-intro mb-8">
+          <Orb size={180} />
         </div>
 
-        {/* Main Action Cards */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <QuickActionCard
-            icon={PlusCircle}
-            title="Create New Project"
-            description="Start a new project from scratch"
-            href="/projects/create"
-          />
-          <QuickActionCard
-            icon={Files}
-            title="View Projects"
-            description="Browse all your existing projects"
-            href="/projects"
-            variant="secondary"
-          />
-        </div>
+        <span className="text-blur-intro mb-5 rounded-full border border-border/70 bg-background/40 px-4 py-1 text-xs font-medium tracking-[0.24em] text-muted-foreground">
+          MEET SAMARITAN
+        </span>
 
-        {/* Info Card */}
-        <Card className="border-dashed">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Getting Started</CardTitle>
-            <CardDescription className="text-sm">
-              Press <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded-md">D</kbd> to toggle dark mode
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Your workspace is ready to go!
-              </p>
-              <form action={logout}>
-                <Button
-                  type="submit"
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </Button>
-              </form>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+        <h1 className="text-blur-intro bg-linear-to-b from-foreground to-primary bg-clip-text text-5xl font-medium tracking-tight text-transparent md:text-7xl">
+          {HERO_GREETING}
+        </h1>
+
+        <p
+          className="text-blur-intro mt-6 max-w-2xl text-lg text-muted-foreground md:text-xl"
+          style={{ animationDelay: "120ms" }}
+        >
+          Describe your project once. Samaritan turns it into a roadmap, tasks,
+          and team chat in moments.
+        </p>
+
+        <div
+          className="text-blur-intro mt-10 flex flex-col items-center gap-3 sm:flex-row"
+          style={{ animationDelay: "220ms" }}
+        >
+          <Button asChild size="lg" className="rounded-full px-8">
+            <Link href="/register">Get started</Link>
+          </Button>
+          <Button asChild size="lg" variant="ghost" className="rounded-full px-8">
+            <Link href="/login">See how it works</Link>
+          </Button>
+        </div>
+      </section>
+    </main>
   )
 }

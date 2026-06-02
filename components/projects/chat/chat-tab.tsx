@@ -59,7 +59,7 @@ export function ChatTab({ projectId, meId, meEmail, meUsername, role }: ChatTabP
     const last = messages[messages.length - 1]
     if (last.id === lastMessageIdRef.current) return
     lastMessageIdRef.current = last.id
-    
+
     requestAnimationFrame(() => {
       const el = scrollRef.current
       if (el) el.scrollTop = el.scrollHeight
@@ -134,6 +134,35 @@ export function ChatTab({ projectId, meId, meEmail, meUsername, role }: ChatTabP
 
   const isMember = role !== null
 
+  function dateKey(iso: string): string {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return ""
+
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, "0")
+    const day = String(d.getDate()).padStart(2, "0")
+
+    return `${year}-${month}-${day}`
+  }
+
+  function formatDateLabel(iso: string): string {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return ""
+
+    const today = new Date()
+    const yesterday = new Date()
+    yesterday.setDate(today.getDate() - 1)
+
+    if (dateKey(iso) === dateKey(today.toISOString())) return "Bugün"
+    if (dateKey(iso) === dateKey(yesterday.toISOString())) return "Dün"
+
+    return d.toLocaleDateString("tr-TR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
+  }
+
   return (
     <div className="flex h-[calc(100vh-16rem)] min-h-[400px] flex-col gap-3">
       <div className="flex items-center justify-between">
@@ -178,16 +207,35 @@ export function ChatTab({ projectId, meId, meEmail, meUsername, role }: ChatTabP
           </div>
         ) : (
           <ul className="flex flex-col gap-4">
-            {messages.map((m) => (
-              <li key={m.id}>
-                <ChatMessage
-                  message={m}
-                  isMine={m.user_id === meId}
-                  canDelete={m.user_id === meId}
-                  onDelete={remove}
-                />
-              </li>
-            ))}
+            {messages.map((m, index) => {
+              const previousMessage = messages[index - 1]
+
+              const showDateSeparator =
+                !previousMessage ||
+                dateKey(previousMessage.created_at) !== dateKey(m.created_at)
+
+              return (
+                <li key={m.id} className="flex flex-col gap-4">
+                  {showDateSeparator && (
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="h-px flex-1 bg-stone-200" />
+                      <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-500">
+                        {formatDateLabel(m.created_at)}
+                      </span>
+                      <div className="h-px flex-1 bg-stone-200" />
+                    </div>
+                  )}
+
+                  <ChatMessage
+                    message={m}
+                    isMine={m.user_id === meId}
+                    canDelete={m.user_id === meId}
+                    onDelete={remove}
+                  />
+                </li>
+              )
+            })}
+
             {awaitingAgent && (
               <li>
                 <SamaritanThinking />

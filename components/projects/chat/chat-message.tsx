@@ -20,6 +20,7 @@ import {
 import { AGENT_DISPLAY_NAME, isAgentMessage } from "@/lib/agent"
 import { cn } from "@/lib/utils"
 import type { ChatMessage as ChatMessageT } from "@/types/message"
+import { Fragment } from "react"
 
 import { MentionHighlight } from "./mention-highlight"
 
@@ -40,6 +41,8 @@ function formatTime(iso: string): string {
   if (Number.isNaN(d.getTime())) return ""
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
+
+
 
 export function ChatMessage({
   message,
@@ -115,10 +118,10 @@ export function ChatMessage({
           className={cn(
             "rounded-2xl px-3 py-2 text-sm wrap-break-word whitespace-pre-wrap",
             isAgent
-              ? "rounded-tl-sm border border-emerald-200 bg-emerald-50/70 text-stone-800"
+              ? "rounded-tl-sm border border-emerald-200 bg-primary text-stone-50"
               : isMine
-              ? "rounded-tr-sm bg-stone-800 text-stone-50"
-              : "rounded-tl-sm bg-stone-100 text-stone-800",
+                ? "rounded-tr-sm bg-stone-800 text-stone-50"
+                : "rounded-tl-sm bg-stone-100 text-stone-800",
             isOptimistic && "opacity-60"
           )}
         >

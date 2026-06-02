@@ -74,7 +74,7 @@ export async function login(
     }
   }
 
-  redirect("/")
+  redirect("/home")
 }
 
 export async function register(
@@ -140,5 +140,5 @@ export async function logout(): Promise<void> {
     await clearAuthToken()
   }
 
-  redirect("/login")
+  redirect("/")
 }
